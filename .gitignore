@@ -5,6 +5,8 @@ backend/ml/saved_models/svd_model.pkl
 backend/data/processed/train*
 backend/data/processed/movies_clean.csv
 backend/data/processed/test2*
+backend/data/raw/
+.vite/
 node_modules/
 frontend/node_modules/
 .env
