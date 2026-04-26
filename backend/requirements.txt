@@ -9,3 +9,5 @@ scipy
 python-dotenv
 gunicorn
 huggingface_hub
+
+# hf-v1
