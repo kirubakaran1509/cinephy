@@ -16,26 +16,18 @@ SAVED = os.path.join(os.path.dirname(__file__), 'ml', 'saved_models')
 
 class WeightedEnsemble(BaseEstimator, RegressorMixin):
     def __init__(self, rf, xgb_m, gbr, weights=(0.40, 0.35, 0.25)):
-        self.rf = rf
-        self.xgb_m = xgb_m
-        self.gbr = gbr
-        self.weights = weights
-        self.feature_cols = None
+        self.rf = rf; self.xgb_m = xgb_m; self.gbr = gbr
+        self.weights = weights; self.feature_cols = None
     def fit(self, X, y):
-        if isinstance(X, pd.DataFrame):
-            self.feature_cols = list(X.columns)
+        if isinstance(X, pd.DataFrame): self.feature_cols = list(X.columns)
         return self
     def predict(self, X):
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X, columns=self.feature_cols)
-        return (self.weights[0] * self.rf.predict(X) +
-                self.weights[1] * self.xgb_m.predict(X) +
-                self.weights[2] * self.gbr.predict(X))
+        if not isinstance(X, pd.DataFrame): X = pd.DataFrame(X, columns=self.feature_cols)
+        return (self.weights[0]*self.rf.predict(X) + self.weights[1]*self.xgb_m.predict(X) + self.weights[2]*self.gbr.predict(X))
 
 print('Loading models...')
 from ml.pure_svd import PureSVD
-
-# Load all models EXCEPT svd (lazy load later)
+svd     = pickle.load(open(os.path.join(SAVED, 'svd_model.pkl'),        'rb'))
 rf      = pickle.load(open(os.path.join(SAVED, 'rf_model.pkl'),         'rb'))
 xgb_m   = pickle.load(open(os.path.join(SAVED, 'xgb_model.pkl'),        'rb'))
 gbr     = pickle.load(open(os.path.join(SAVED, 'gbr_model.pkl'),         'rb'))
@@ -57,11 +49,8 @@ links['tmdbId'] = links['tmdbId'].astype(int).astype(str)
 mid_to_tmdb = dict(zip(links['movieId'], links['tmdbId']))
 
 print('Pre-caching scores...')
-all_mids      = master['id'].tolist()
-content_cache = {}
-ens_cache     = {}
-feat_rows     = []
-valid_mids    = []
+all_mids = master['id'].tolist()
+content_cache = {}; ens_cache = {}; feat_rows = []; valid_mids = []
 
 for mid in all_mids:
     mid_str = str(mid)
@@ -69,31 +58,15 @@ for mid in all_mids:
         row = mlookup.loc[mid_str]
         ws  = row.get('weighted_score', 5.5)
         content_cache[mid_str] = float(ws.iloc[0] if isinstance(ws, pd.Series) else ws)
-        feat_rows.append([
-            float(row.get(c, 0)) if not isinstance(row.get(c, 0), pd.Series)
-            else float(row.get(c, 0).iloc[0]) for c in feat
-        ])
+        feat_rows.append([float(row.get(c,0)) if not isinstance(row.get(c,0), pd.Series) else float(row.get(c,0).iloc[0]) for c in feat])
         valid_mids.append(mid_str)
     else:
-        content_cache[mid_str] = 5.5
-        ens_cache[mid_str]     = 5.5
+        content_cache[mid_str] = 5.5; ens_cache[mid_str] = 5.5
 
 if feat_rows:
-    fd_all    = pd.DataFrame(feat_rows, columns=feat).fillna(0)
+    fd_all = pd.DataFrame(feat_rows, columns=feat).fillna(0)
     ens_preds = ensemble.predict(fd_all)
-    for mid_str, score in zip(valid_mids, ens_preds):
-        ens_cache[mid_str] = float(score)
-
-# SVD loaded lazily on first user-based request
-svd = None
-
-def get_svd():
-    global svd
-    if svd is None:
-        print('Loading SVD model on demand...')
-        svd = pickle.load(open(os.path.join(SAVED, 'svd_model.pkl'), 'rb'))
-        print('SVD loaded.')
-    return svd
+    for mid_str, score in zip(valid_mids, ens_preds): ens_cache[mid_str] = float(score)
 
 print('All caches ready.')
 
