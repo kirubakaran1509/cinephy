@@ -1,23 +1,10 @@
-# Python
 backend/__pycache__/
 backend/**/__pycache__/
 *.pyc
-*.pyo
-
-# ML models (too large for GitHub)
-backend/saved_models/
-backend/ml/saved_models/
-
-# Data files
+backend/ml/saved_models/svd_model.pkl
 backend/data/
-
-# Node
 node_modules/
 frontend/node_modules/
-
-# Env files
 .env
 **/.env
-
-# Lock files
 package-lock.json
