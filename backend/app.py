@@ -34,7 +34,8 @@ class WeightedEnsemble(BaseEstimator, RegressorMixin):
 
 print('Loading models...')
 from ml.pure_svd import PureSVD
-svd     = pickle.load(open(os.path.join(SAVED, 'svd_model.pkl'),        'rb'))
+
+# Load all models EXCEPT svd (lazy load later)
 rf      = pickle.load(open(os.path.join(SAVED, 'rf_model.pkl'),         'rb'))
 xgb_m   = pickle.load(open(os.path.join(SAVED, 'xgb_model.pkl'),        'rb'))
 gbr     = pickle.load(open(os.path.join(SAVED, 'gbr_model.pkl'),         'rb'))
@@ -82,6 +83,17 @@ if feat_rows:
     ens_preds = ensemble.predict(fd_all)
     for mid_str, score in zip(valid_mids, ens_preds):
         ens_cache[mid_str] = float(score)
+
+# SVD loaded lazily on first user-based request
+svd = None
+
+def get_svd():
+    global svd
+    if svd is None:
+        print('Loading SVD model on demand...')
+        svd = pickle.load(open(os.path.join(SAVED, 'svd_model.pkl'), 'rb'))
+        print('SVD loaded.')
+    return svd
 
 print('All caches ready.')
 

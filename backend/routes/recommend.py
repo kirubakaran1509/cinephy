@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from ml_engine import master, indices, tfidf_m, svd, content_cache, ens_cache, mid_to_tmdb
+from ml_engine import master, indices, tfidf_m, content_cache, ens_cache, mid_to_tmdb
 from sklearn.metrics.pairwise import cosine_similarity as cos_sim
 import numpy as np
 import ast
@@ -81,7 +81,7 @@ def get_recs_by_user(user_id, n=5):
     for mid_str in list(content_cache.keys()):
         try:
             mid_int = int(mid_str)
-            svd_s   = svd.predict(user_id, mid_int) * 2.0
+            from app import get_svd; svd_s = get_svd().predict(user_id, mid_int) * 2.0
             scores[mid_str] = (0.40 * content_cache.get(mid_str, 5.5) +
                                0.35 * svd_s +
                                0.25 * ens_cache.get(mid_str, 5.5))
