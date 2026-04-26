@@ -1,0 +1,42 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 16px;
+  text-align: center;
+  gap: 12px;
+}
+
+.iconWrap {
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+.button {
+  margin-top: 12px;
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.button:hover {
+  background: var(--accent-hover);
+}

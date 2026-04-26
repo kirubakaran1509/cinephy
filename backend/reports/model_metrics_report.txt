@@ -1,0 +1,284 @@
+========================================================================
+  MOVIE RECOMMENDATION SYSTEM
+  MODEL TRAINING AND EVALUATION REPORT
+  Generated : 2026-04-26 15:11:08
+  Version   : 1.0.0
+========================================================================
+
+  SECTION 1 : DATA PIPELINE
+------------------------------------------------------------------------
+  Total raw rating records ingested     : 73,777,996
+    train1_ratings_clean.csv            : 20,000,263 records
+    train2_ratings_clean.csv            : 27,753,444 records
+    train3_ratings_full_clean.csv       : 26,024,289 records
+  Movie metadata                        : train3_movies_clean.csv     (15,619 movies)
+  Credits                               : train3_credits_clean.csv    (45,476 records)
+  Keywords                              : train3_keywords_clean.csv   (46,419 records)
+  Genome scores (train1+train2)         : 1,052,807 records (relevance > 0.5 filtered)
+  Held-out evaluation set               : test1_ratings + test2_ratings
+                                          100,836 records -- never used in training
+  Data leakage controls                 :
+    - Weighted score C and m            : computed on master movies only
+    - LabelEncoders                     : fitted on train split only
+    - TF-IDF vectorizer                 : fitted on master movies only
+    - SVD encodings                     : built from 80pct train split only
+    - Test files                        : untouched until final evaluation
+
+  SECTION 2 : MODEL 1 -- CONTENT-BASED FILTERING
+------------------------------------------------------------------------
+  Weight in ensemble                    : 40%
+  Algorithm                             : TF-IDF Vectorizer + Cosine Similarity
+  Training data                         : 15,619 movies
+  Input features                        : Genres, Keywords, Cast (top 5),
+                                          Director, Movie Overview (soup string)
+  TF-IDF vocabulary                     : 15,000 features
+  N-gram range                          : (1, 2) unigrams and bigrams
+  Min document frequency                : 2
+  Matrix shape                          : 15,619 x 15,000 (sparse float32)
+  Matrix file size                      : 3.69 MB
+  Similarity metric                     : Cosine Similarity (computed per query)
+  Leakage status                        : None
+  Overfitting status                    : Not applicable (no trainable parameters)
+
+  SECTION 3 : MODEL 2 -- COLLABORATIVE FILTERING (SVD)
+------------------------------------------------------------------------
+  Weight in ensemble                    : 35%
+  Algorithm                             : Funk-style Matrix Factorization (NumPy SGD)
+  Total ratings available               : 73,777,996
+  Train split (80%)                     : 59,022,396 records
+  Test split  (20%)                     : 14,755,600 records
+  SVD training sample                   : 3,000,000 records
+    Sampling strategy                   : All light users (< 20 ratings) retained
+                                          Heavy users sampled proportionally
+                                          Ensures cold-start coverage
+  Latent factors (n_factors)            : 100
+  Training epochs                       : 20
+  Learning rate                         : 0.005
+  Regularization                        : 0.02 (applied to factors and biases)
+  Saved model size                      : 387.97 MB
+  Leakage status                        : None
+  Overfitting control                   : L2 regularization on all parameters
+
+  SECTION 4 : MODEL 3 -- ML ENSEMBLE (RF + XGBoost + GBR)
+------------------------------------------------------------------------
+  Weight in ensemble                    : 25%
+  Algorithm                             : Weighted VotingRegressor
+  Total movies used                     : 15,619
+  Train split (80%)                     : 12,495 movies
+  Test split  (20%)                     : 3,124 movies
+  Target variable                       : weighted_score (IMDB-style quality score)
+  Input features                        : budget, revenue, runtime, popularity,
+                                          rating_count, rating_std, avg_rating,
+                                          genre_encoded, language_encoded, year
+  
+  Sub-model 1 : Random Forest
+    n_estimators                        : 200 trees
+    max_depth                           : 10
+    min_samples_split                   : 5
+    min_samples_leaf                    : 2
+    Overfitting control                 : min_samples constraints + bagging
+  
+  Sub-model 2 : XGBoost
+    n_estimators                        : 200 rounds
+    max_depth                           : 6
+    learning_rate                       : 0.05
+    subsample                           : 0.80
+    colsample_bytree                    : 0.80
+    reg_alpha                           : 0.10
+    reg_lambda                          : 1.00
+    Overfitting control                 : subsample + L1/L2 regularization
+  
+  Sub-model 3 : Gradient Boosting Regressor
+    n_estimators                        : 150 rounds
+    max_depth                           : 5
+    learning_rate                       : 0.05
+    subsample                           : 0.80
+    min_samples_split                   : 5
+    Overfitting control                 : subsample + min_samples constraint
+  
+  Ensemble weights                      : RF=40%  XGBoost=35%  GBR=25%
+  Leakage status                        : None
+
+  SECTION 5 : COMBINED SCORING FORMULA
+------------------------------------------------------------------------
+  Formula   : 0.40 x Content Score
+            + 0.35 x Collaborative Score (scaled to 0-10)
+            + 0.25 x ML Ensemble Score
+  Output    : Top 4-5 ranked movies per user query
+  Metadata  : Title, Year, Genre, Director, Cast, Synopsis, Reason
+
+  SECTION 6 : EVALUATION RESULTS
+------------------------------------------------------------------------
+  Metric                                : Hit Rate @ 4
+  Definition                            : Percentage of users where at least 1 of
+                                          the top 4 recommendations matches a
+                                          held-out movie rated >= 3.5 by that user
+  Evaluation source                     : test1_ratings_clean.csv +
+                                          test2_ratings_clean.csv
+                                          (strictly held-out, zero training use)
+  Total evaluation ratings              : 100,836
+  Evaluation pseudo-train (80%)         : 80,764 records (simulates known history)
+  Evaluation test (20%)                 : 20,072 records (ground truth)
+  Users tested                          : 491
+  Successful hits                       : 476
+  Hit Rate @ 4                          : 96.9%
+
+  SECTION 7 : SAVED MODEL ARTIFACTS
+------------------------------------------------------------------------
+  collab_movie_ids.pkl ...................... 0.39 MB
+  content_indices.pkl ....................... 0.47 MB
+  ensemble_model.pkl ........................ 17.07 MB
+  feature_cols.pkl .......................... 0.0 MB
+  gbr_model.pkl ............................. 0.6 MB
+  le_genre.pkl .............................. 0.0 MB
+  le_lang.pkl ............................... 0.0 MB
+  movie2idx.pkl ............................. 0.45 MB
+  movie_lookup.csv .......................... 9.86 MB
+  rf_model.pkl .............................. 15.63 MB
+  svd_model.pkl ............................. 387.97 MB
+  tfidf_matrix.npz .......................... 3.69 MB
+  tfidf_vectorizer.pkl ...................... 0.55 MB
+  user2idx.pkl .............................. 10.58 MB
+  xgb_model.pkl ............................. 0.84 MB
+
+========================================================================
+  SECTION 8 : SAMPLE RECOMMENDATION OUTPUT
+========================================================================
+
+  INPUT MOVIE : TOY STORY
+------------------------------------------------------------------------
+
+  Rank 1  :  Toy Story 2  (1999)
+  Genre       :  Animation, Comedy, Family
+  Director    :  John Lasseter
+  Cast        :  Tom Hanks, Tim Allen, Joan Cusack, Kelsey Grammer, Don Rickles
+  Synopsis    :  Andy heads off to Cowboy Camp, leaving his toys to their own devices.
+  Reason      :  Matching genre: Animation, Comedy | Similar themes: museum, prosecution, identity crisis
+  Similarity  :  47.5%   |   Vote Avg: 7.3   |   Weighted Score: 7.26
+
+  Rank 2  :  Toy Story 3  (2010)
+  Genre       :  Animation, Family, Comedy
+  Director    :  Lee Unkrich
+  Cast        :  Tom Hanks, Tim Allen, Ned Beatty, Joan Cusack, Michael Keaton
+  Synopsis    :  Woody, Buzz, and the rest of Andy's toys haven't been played with in years.
+  Reason      :  Matching genre: Animation, Family | Similar themes: hostage, college, toy
+  Similarity  :  45.1%   |   Vote Avg: 7.6   |   Weighted Score: 7.56
+
+  Rank 3  :  Toy Story That Time Forgot  (2014)
+  Genre       :  Animation, Family
+  Director    :  Steve Purcell
+  Cast        :  Tom Hanks, Tim Allen, Joan Cusack, Kristen Schaal, Wallace Shawn
+  Synopsis    :  During a post-Christmas play date, the gang find themselves in uncharted territory when the coolest set of action figures ever ...
+  Reason      :  Matching genre: Animation, Family | Similar themes: toy, short, toy story
+  Similarity  :  32.4%   |   Vote Avg: 6.8   |   Weighted Score: 6.6
+
+  Rank 4  :  Toy Story of Terror!  (2013)
+  Genre       :  Animation, Comedy, Family
+  Director    :  Angus MacLane
+  Cast        :  Tom Hanks, Tim Allen, Kristen Schaal, Carl Weathers, Wallace Shawn
+  Synopsis    :  What starts out as a fun road trip for the Toy Story gang takes an unexpected turn for the worse when the trip detours to a roa...
+  Reason      :  Matching genre: Animation, Comedy | Similar themes: halloween, toys, short
+  Similarity  :  29.2%   |   Vote Avg: 7.3   |   Weighted Score: 6.91
+
+  Rank 5  :  Partysaurus Rex  (2012)
+  Genre       :  Animation, Comedy, Family
+  Director    :  Mark A. Walsh
+  Cast        :  Tom Hanks, Tim Allen, Wallace Shawn, Corey Burton, Tony Cox
+  Synopsis    :  When Rex finds himself left behind in the bathroom, he puts his limbs to use by getting a bath going for a bunch of new toy fri...
+  Reason      :  Matching genre: Animation, Comedy | Similar themes: tyrannosaurus rex, bath tub, water
+  Similarity  :  28.2%   |   Vote Avg: 7.4   |   Weighted Score: 6.66
+
+------------------------------------------------------------------------
+
+  INPUT MOVIE : THE DARK KNIGHT
+------------------------------------------------------------------------
+
+  Rank 1  :  The Dark Knight Rises  (2012)
+  Genre       :  Action, Crime, Drama
+  Director    :  Christopher Nolan
+  Cast        :  Christian Bale, Michael Caine, Gary Oldman, Anne Hathaway, Tom Hardy
+  Synopsis    :  Following the death of District Attorney Harvey Dent, Batman assumes responsibility for Dent's crimes to protect the late attor...
+  Reason      :  Matching genre: Action, Crime | Similar themes: dc comics, crime fighter, terrorist
+  Similarity  :  50.3%   |   Vote Avg: 7.6   |   Weighted Score: 7.58
+
+  Rank 2  :  Batman Begins  (2005)
+  Genre       :  Action, Crime, Drama
+  Director    :  Christopher Nolan
+  Cast        :  Christian Bale, Michael Caine, Liam Neeson, Katie Holmes, Gary Oldman
+  Synopsis    :  Driven by tragedy, billionaire Bruce Wayne dedicates his life to uncovering and defeating the corruption that plagues his home,...
+  Reason      :  Matching genre: Action, Crime | Similar themes: himalaya, martial arts, dc comics
+  Similarity  :  43.2%   |   Vote Avg: 7.5   |   Weighted Score: 7.48
+
+  Rank 3  :  Batman: Under the Red Hood  (2010)
+  Genre       :  Action, Animation
+  Director    :  Brandon Vietti
+  Cast        :  Bruce Greenwood, Jensen Ackles, Neil Patrick Harris, Jason Isaacs, John DiMaggio
+  Synopsis    :  Batman faces his ultimate challenge as the mysterious Red Hood takes Gotham City by firestorm.
+  Reason      :  Matching genre: Action, Animation | Similar themes: martial arts, dc comics, vigilante
+  Similarity  :  35.2%   |   Vote Avg: 7.6   |   Weighted Score: 7.27
+
+  Rank 4  :  Batman Forever  (1995)
+  Genre       :  Action, Crime, Fantasy
+  Director    :  Joel Schumacher
+  Cast        :  Val Kilmer, Tommy Lee Jones, Jim Carrey, Nicole Kidman, Chris O'Donnell
+  Synopsis    :  The Dark Knight of Gotham City confronts a dastardly duo: Two-Face and the Riddler.
+  Reason      :  Matching genre: Action, Crime | Similar themes: riddle, dc comics, rose
+  Similarity  :  33.6%   |   Vote Avg: 5.2   |   Weighted Score: 5.3
+
+  Rank 5  :  Batman Returns  (1992)
+  Genre       :  Action, Fantasy
+  Director    :  Tim Burton
+  Cast        :  Michael Keaton, Danny DeVito, Michelle Pfeiffer, Christopher Walken, Michael Gough
+  Synopsis    :  Having defeated the Joker, Batman now faces the Penguin - a warped and deformed individual who is intent on being accepted into...
+  Reason      :  Matching genre: Action, Fantasy | Similar themes: holiday, corruption, double life
+  Similarity  :  33.4%   |   Vote Avg: 6.6   |   Weighted Score: 6.57
+
+------------------------------------------------------------------------
+
+  INPUT MOVIE : INCEPTION
+------------------------------------------------------------------------
+
+  Rank 1  :  Uncertainty  (2009)
+  Genre       :  Drama, Thriller, Romance
+  Director    :  Scott McGehee
+  Cast        :  Joseph Gordon-Levitt, Lynn Collins, Assumpta Serna, Nelson Landrieu, Manoel Felciano
+  Synopsis    :  Every choice has a consequence.
+  Reason      :  Matching genre: Drama, Thriller | Similar themes: independent film
+  Similarity  :  18.6%   |   Vote Avg: 5.7   |   Weighted Score: 6.16
+
+  Rank 2  :  Don Jon  (2013)
+  Genre       :  Romance, Comedy, Drama
+  Director    :  Joseph Gordon-Levitt
+  Cast        :  Joseph Gordon-Levitt, Scarlett Johansson, Julianne Moore, Tony Danza, Glenne Headly
+  Synopsis    :  A New Jersey guy dedicated to his family, friends, and church, develops unrealistic expectations from watching porn and works t...
+  Reason      :  Matching genre: Romance, Comedy | Similar themes: pornography, sex, sex addiction
+  Similarity  :  18.2%   |   Vote Avg: 5.9   |   Weighted Score: 5.93
+
+  Rank 3  :  (500) Days of Summer  (2009)
+  Genre       :  Comedy, Drama, Romance
+  Director    :  Marc Webb
+  Cast        :  Joseph Gordon-Levitt, Zooey Deschanel, Chloë Grace Moretz, Geoffrey Arend, Matthew Gray Gubler
+  Synopsis    :  Tom (Joseph Gordon-Levitt), greeting-card writer and hopeless romantic, is caught completely off-guard when his girlfriend, Sum...
+  Reason      :  Matching genre: Comedy, Drama | Similar themes: date, sex, jealousy
+  Similarity  :  17.2%   |   Vote Avg: 7.2   |   Weighted Score: 7.16
+
+  Rank 4  :  Mouth to Mouth  (2005)
+  Genre       :  Drama
+  Director    :  Alison Murray
+  Cast        :  Ellen Page, Natasha Wightman, Eric Thal, August Diehl, Diana Greenwood
+  Synopsis    :  An aimless adolescent (Ellen Page) joins several itinerant misfits who live on the fringe of society and welcome at-risk youths...
+  Reason      :  Matching genre: Drama | Similar themes: junkie, methadone programme, straßenkids
+  Similarity  :  16.5%   |   Vote Avg: 5.5   |   Weighted Score: 6.15
+
+  Rank 5  :  Hesher  (2010)
+  Genre       :  Drama
+  Director    :  Spencer Susser
+  Cast        :  Joseph Gordon-Levitt, Natalie Portman, Rainn Wilson, Audrey Wasilewski, Frank Collison
+  Synopsis    :  A young boy has lost his mother and is losing touch with his father and the world around him.
+  Reason      :  Matching genre: Drama | Similar themes: loss of mother, clerk, grocery
+  Similarity  :  15.8%   |   Vote Avg: 6.7   |   Weighted Score: 6.52
+
+------------------------------------------------------------------------
+========================================================================
+  END OF REPORT
+========================================================================

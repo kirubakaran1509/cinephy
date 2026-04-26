@@ -1,0 +1,226 @@
+.header { margin-bottom: 24px; }
+
+.title { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+
+.subtitle { color: var(--text-secondary); font-size: 14px; }
+
+.searchBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 6px 0 48px;
+  margin-bottom: 32px;
+  transition: var(--transition);
+}
+
+.searchBar:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.15);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-muted);
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  height: 100%;
+  font-size: 15px;
+}
+
+.searchInput::placeholder { color: var(--text-muted); }
+
+.searchBtn {
+  background: var(--accent);
+  color: #fff;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.searchBtn:hover { background: var(--accent-hover); }
+
+.section { margin-bottom: 36px; }
+
+.sectionHeader {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.genreGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.genreCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 22px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.genreCard:hover {
+  border-color: var(--accent);
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(229, 9, 20, 0.15);
+}
+
+.genreIcon { color: var(--accent); }
+
+.genreName {
+  text-align: center;
+}
+
+.results { margin-top: 24px; }
+
+.resultsHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.resultsHeader h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.count {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+  transition: var(--transition);
+}
+
+.card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 25px rgba(229, 9, 20, 0.15);
+  transform: translateY(-2px);
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardYear {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.voteAvg {
+  color: var(--star-color);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.btnPrimary {
+  flex: 1;
+  background: var(--accent);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btnPrimary:hover { background: var(--accent-hover); }
+
+.btnOutline {
+  flex: 1;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btnOutline:hover { background: rgba(229, 9, 20, 0.12); }
+
+.btnSaved {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.btnSaved:hover { background: rgba(16, 185, 129, 0.12); }
+
+@media (max-width: 1280px) {
+  .genreGrid { grid-template-columns: repeat(3, 1fr); }
+  .grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .genreGrid { grid-template-columns: repeat(2, 1fr); }
+  .grid { grid-template-columns: 1fr; }
+}

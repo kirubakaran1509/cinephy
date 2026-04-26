@@ -1,0 +1,31 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #fff;
+}
+
+.large {
+  font-size: 16px;
+  padding: 8px 14px;
+  min-width: 56px;
+}
+
+.high {
+  background: var(--green);
+}
+
+.mid {
+  background: var(--star-color);
+  color: #1f1300;
+}
+
+.low {
+  background: var(--accent);
+}

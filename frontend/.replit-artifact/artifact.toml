@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Cinephy"
+version = "1.0.0"
+id = "artifacts/cinephy"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18400
+
+[services.development]
+run = "pnpm --filter @workspace/cinephy run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cinephy", "run", "build" ]
+publicDir = "artifacts/cinephy/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18400"
+BASE_PATH = "/"

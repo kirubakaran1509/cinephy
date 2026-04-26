@@ -1,0 +1,52 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--star-color);
+}
+
+.starFull {
+  color: var(--star-color);
+}
+
+.starEmpty {
+  color: var(--border-hover);
+}
+
+.starWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.halfStarBox {
+  position: relative;
+  display: inline-block;
+}
+
+.halfStarBox .starEmpty {
+  position: absolute;
+  inset: 0;
+}
+
+.halfStarBox .starFull {
+  position: absolute;
+  inset: 0;
+}
+
+.halfBtn {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  background: transparent;
+  z-index: 2;
+  cursor: pointer;
+  padding: 0;
+}
+
+.halfBtn.right {
+  left: 50%;
+  width: 50%;
+}
