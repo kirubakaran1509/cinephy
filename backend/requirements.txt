@@ -8,6 +8,4 @@ xgboost
 scipy
 python-dotenv
 gunicorn
-gdown
-
-# v2
+huggingface_hub
